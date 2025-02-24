@@ -1,0 +1,2 @@
+experiments/stmtrack/test/lasot/stmtrack-googlenet-lasot.yaml
+python ./demo/main/video/sot_video.py --config 'experiments/stmtrack/test/lasot/stmtrack-googlenet-lasot.yaml' --device cuda --video ./video/test.mp4 --output ./dump/result.mp4
