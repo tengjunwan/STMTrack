@@ -129,7 +129,8 @@ def main(args):
             vw = ImageFileVideoWriter(osp.join(args.output, video_name))
         # save as a single video file
         else:
-            vw = VideoWriter(args.output, fps=20)
+            fps = vs.get(cv2.CAP_PROP_FPS)
+            vw = VideoWriter(args.output, fps=fps)
 
     # loop over sequence
     frame_idx = 0  # global frame index
