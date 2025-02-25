@@ -95,6 +95,9 @@ def main(args):
     pipeline.set_device(dev)
     init_box = None
     template = None
+
+    
+    init_box = (670, 234, 145, 113) # my code for debug
     if len(args.init_bbox) == 4:
         init_box = args.init_bbox
 

@@ -166,9 +166,9 @@ class STMTrackTracker(PipelineBase):
         self._state['im_w'] = im.shape[1]
 
         score_size = self._hp_score_size # 25
-        if self._hyper_params['windowing'] == 'cosine':
+        if self._hyper_params['windowing'] == 'cosine':  # cosine
             window = np.outer(np.hanning(score_size), np.hanning(score_size))  # 25 * 25 
-            window = window.reshape(-1)
+            window = window.reshape(-1)  # (625, )
         elif self._hyper_params['windowing'] == 'uniform':
             window = np.ones((score_size, score_size))
         else:
@@ -183,8 +183,8 @@ class STMTrackTracker(PipelineBase):
         self._state['pscores'] = [1.0, ]
         self._state['cur_frame_idx'] = 1
         self._state["rng"] = np.random.RandomState(123456)
-        search_area = np.prod(target_sz * self._hyper_params['search_area_factor'])
-        self._state['target_scale'] = math.sqrt(search_area) / self._hp_q_size
+        search_area = np.prod(target_sz * self._hyper_params['search_area_factor'])  # search_area_factor=4.0, search_area = h * w * 4, math.sqrt(search_area)= r * 2, 即检测等效边长的2倍为下一帧的search image
+        self._state['target_scale'] = math.sqrt(search_area) / self._hp_q_size  # self._hp_q_size is the input size of query(search image), =1.77
         self._state['base_target_sz'] = target_sz / self._state['target_scale']
         if self._hp_visualization:
             vsm.rename_dir()
@@ -204,7 +204,7 @@ class STMTrackTracker(PipelineBase):
         else:
             avg_chans = self._state['avg_chans']
 
-        q_size = self._hp_q_size
+        q_size = self._hp_q_size  # 289
 
         phase_track = self._hyper_params['phase_track']
         im_q_crop, scale_q = get_crop_single(im_q, target_pos, self._state['target_scale'], q_size, avg_chans)
@@ -288,16 +288,21 @@ class STMTrackTracker(PipelineBase):
         prev_frame_feat = self.memorize(self._state['last_img'],
                                  self._state['track_rects'][fidx - 1]['target_pos'],
                                  self._state['track_rects'][fidx - 1]['target_sz'],
-                                 self._state['avg_chans'])
+                                 self._state['avg_chans'])  # (1, 512, 1, 25, 25)
 
-        if fidx > self._hp_gpu_memory_threshold:
+        if fidx > self._hp_gpu_memory_threshold:  # self._hp_gpu_memory_threshold=1000
             prev_frame_feat = prev_frame_feat.detach().cpu()
         self._state['all_memory_frame_feats'].append(prev_frame_feat)
 
-        if fidx <= self._hp_num_segments:
-            features = torch.cat(self._state['all_memory_frame_feats'], dim=2)
-        else:
-            features = self.select_representatives(fidx)
+        # if fidx <= self._hp_num_segments:  # self._hp_num_segments=4
+        #     features = torch.cat(self._state['all_memory_frame_feats'], dim=2)
+        # else:
+        #     features = self.select_representatives(fidx)
+
+        if True:
+            first_feat = self._state['all_memory_frame_feats'][0].cuda()
+            prev_feat = self._state['all_memory_frame_feats'][-1].cuda()
+            features = torch.cat([first_feat, prev_feat], dim=2)
 
         # forward inference to estimate new state
         target_pos, target_sz = self.track(im,
