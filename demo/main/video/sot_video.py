@@ -150,12 +150,15 @@ def main(args):
                 time_cost = time.time() - time_a
                 bbox_pred = xywh2xyxy(rect_pred)
                 bbox_pred = tuple(map(int, bbox_pred))
+                pscore = pipeline._state['pscores'][-1]
                 cv2.putText(show_frame,
                             "track cost: {:.4f} s".format(time_cost), (128, 20),
                             cv2.FONT_HERSHEY_COMPLEX, font_size, (0, 0, 255),
                             font_width, cv2.LINE_AA)
                 cv2.rectangle(show_frame, bbox_pred[:2], bbox_pred[2:],
-                              (0, 255, 0), thickness=3)
+                              (0, 0, 255), thickness=3)
+                cv2.putText(show_frame,  f"{pscore:.2f}", bbox_pred[:2], cv2.FONT_HERSHEY_COMPLEX_SMALL, 2,
+                        (0, 0, 255), 3)
                 if template is not None:
                     show_frame[:128, :128] = template
             else:
