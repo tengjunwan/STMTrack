@@ -6,6 +6,8 @@ import numpy as np
 import math
 
 import torch
+import sys
+print(sys.path)
 
 from videoanalyst.pipeline.pipeline_base import TRACK_PIPELINES, PipelineBase
 from videoanalyst.pipeline.utils import (cxywh2xywh,
@@ -88,6 +90,7 @@ class STMTrackTracker(PipelineBase):
         self._hp_m_size = self._hyper_params['m_size']
         self._hp_q_size = self._hyper_params['q_size']
         self._hp_num_segments = self._hyper_params['num_segments']
+        self._hp_num_segments = 4  # wtj debug code
         self._hp_gpu_memory_threshold = self._hyper_params['gpu_memory_threshold']
         self._hp_confidence_threshold = self._hyper_params['confidence_threshold']
         self._hp_visualization = self._hyper_params['visualization']
@@ -174,7 +177,8 @@ class STMTrackTracker(PipelineBase):
         else:
             window = np.ones((score_size, score_size))
 
-        self._state['avg_chans'] = (np.mean(im[..., 0]), np.mean(im[..., 1]), np.mean(im[..., 2]))
+        # self._state['avg_chans'] = (np.mean(im[..., 0]), np.mean(im[..., 1]), np.mean(im[..., 2]))
+        self._state['avg_chans'] = (0.0, 0.0, 0.0)
         self._state['window'] = window
         self._state['state'] = (target_pos, target_sz)
         self._state['last_img'] = im
@@ -300,9 +304,10 @@ class STMTrackTracker(PipelineBase):
         #     features = self.select_representatives(fidx)
 
         if True:
-            first_feat = self._state['all_memory_frame_feats'][0].cuda()
-            prev_feat = self._state['all_memory_frame_feats'][-1].cuda()
-            features = torch.cat([first_feat, prev_feat], dim=2)
+            # first_feat = self._state['all_memory_frame_feats'][0].cuda()
+            # prev_feat = self._state['all_memory_frame_feats'][-1].cuda()
+            # features = torch.cat([first_feat, prev_feat], dim=2)
+            features = self._state['all_memory_frame_feats'][0].cuda()  # only first frame for simplicity
 
         # forward inference to estimate new state
         target_pos, target_sz = self.track(im,
